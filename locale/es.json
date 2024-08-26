@@ -28,7 +28,7 @@
     "not_known_devices": "No hay dispositivos conocidos",
     "known_devices_deleted": "🗑️ Todos los dispositivos conocidos han sido borrados",
     "unknown": "Desconocido",
-    "user_not_admin": "❌ Este bot no te pertenece.\n\nSi quieres controlar tus contenedores Docker a través de Telegram despliégame en tu servidor.\n\nEcha un vistazo en [DockerHub](https://hub.docker.com/r/dgongut/docker-controller-bot) donde encontrarás un docker-compose. \n\n¿Eres curioso? El código se encuentra publicado en [GitHub](https://github.com/dgongut/docker-controller-bot).\n\nSi tienes dudas, pregúntame, soy @dgongut",
-    "version": "⚙️ _Versión: $1_\nDesarrollado con ❤️ por @dgongut\n\nSi encuentras cualquier fallo o sugerencia contáctame.\n\nPuedes encontrar todo lo relacionado con este bot en [DockerHub](https://hub.docker.com/r/dgongut/docker-controller-bot) o en [GitHub](https://github.com/dgongut/docker-controller-bot).\n\nSi quieres entrar al canal de noticias [haz click aquí](https://t.me/dockercontrollerbotnews).",
+    "user_not_admin": "❌ Este bot no te pertenece.\n\nSi quieres controlar los intrusos en tu red a través de Telegram despliégame en tu servidor.\n\nEcha un vistazo en [DockerHub](https://hub.docker.com/r/dgongut/intrubot) donde encontrarás un docker-compose. \n\n¿Eres curioso? El código se encuentra publicado en [GitHub](https://github.com/dgongut/intrubot).\n\nSi tienes dudas, pregúntame, soy @dgongut",
+    "version": "⚙️ _Versión: $1_\nDesarrollado con ❤️ por @dgongut\n\nSi encuentras cualquier fallo o sugerencia contáctame.\n\nPuedes encontrar todo lo relacionado con este bot en [DockerHub](https://hub.docker.com/r/dgongut/intrubot) o en [GitHub](https://github.com/dgongut/intrubot).",
     "warning_not_admin": "El usuario $1 (@$2) no es un administrador y ha tratado de usar el bot."
 }
