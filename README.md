@@ -51,7 +51,7 @@ services:
             #- TELEGRAM_THREAD=1
             #- LANGUAGE=ES
         volumes:
-            - /ruta/para/guardar/las/programaciones:/app/data # CAMBIAR LA PARTE IZQUIERDA
+            - /ruta/para/guardar/los/datos:/app/data # CAMBIAR LA PARTE IZQUIERDA
         image: dgongut/intrubot:latest
         container_name: intrubot
         restart: always
