@@ -9,7 +9,7 @@ ENV IP_RANGE abc
 ENV LANGUAGE ES
 ENV TZ UTC
 
-ARG VERSION=0.8.0
+ARG VERSION=0.9.0
 
 WORKDIR /app
 RUN wget https://github.com/dgongut/intrubot/archive/refs/tags/v${VERSION}.tar.gz -P /tmp

@@ -10,7 +10,7 @@ from datetime import datetime
 from config import *
 from ipaddress import ip_address
 
-VERSION = "0.8.0"
+VERSION = "0.9.0"
 
 def debug(message):
     print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} - DEBUG: {message}')
@@ -76,14 +76,6 @@ if "abc" == IP_RANGE:
 # Inicializa el bot de Telegram
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# Función para obtener el nombre del dispositivo a partir de su IP
-def get_device_name(ip):
-    try:
-        device_name = socket.gethostbyaddr(ip)
-        return device_name[0]  # Devuelve el nombre de host
-    except socket.herror:
-        return get_text("unknown")  # No se pudo obtener el nombre de host
-
 # Función para cargar dispositivos conocidos desde un archivo JSON
 def load_known_devices():
     if os.path.exists(FULL_KNOWN_DEVICES_PATH):
@@ -98,22 +90,24 @@ def load_known_devices():
                 error("Error al decodificar el archivo JSON.")
     return {}
 
-def save_known_devices():
-    # Convertir IPs a enteros para ordenar numéricamente
-    sorted_devices = dict(sorted(
-        known_devices.items(),
-        key=lambda item: int(ip_address(item[0]))  # Convertir IP a entero para ordenar numéricamente
-    ))
-
-    # Guardar el diccionario ordenado en el archivo JSON
-    with open(FULL_KNOWN_DEVICES_PATH, 'w') as f:
-        json.dump(sorted_devices, f, indent=4, sort_keys=False)  # sort_keys=False porque ya hemos ordenado
-
 # Cargamos los dispositivos conocidos al iniciar el script
 known_devices = load_known_devices()
 
+def save_known_devices():
+    with open(FULL_KNOWN_DEVICES_PATH, 'w') as f:
+        json.dump(known_devices, f, indent=4, sort_keys=False)
+
+# Función para obtener el nombre del dispositivo a partir de su IP
+def get_device_name(ip):
+    try:
+        device_name = socket.gethostbyaddr(ip)
+        return device_name[0]  # Devuelve el nombre de host
+    except socket.herror:
+        return get_text("unknown")  # No se pudo obtener el nombre de host
+
 # Función para escanear una IP
 def scan_ip(ip):
+    global known_devices
     arp_request = scapy.ARP(pdst=str(ip))
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_request_broadcast = broadcast / arp_request
@@ -131,6 +125,10 @@ def scan_ip(ip):
         # Si es un dispositivo nuevo, envía una notificación
         if device_ip not in known_devices:
             known_devices[device_ip] = device_name
+            known_devices = dict(sorted(
+                known_devices.items(),
+                key=lambda item: int(ip_address(item[0])) # Ordenamos los valores antes de guardarlos
+            ))
             if device_name == get_text("unknown"):
                 send_message(message=get_text("new_device_detected_without_name", device_ip))
             else:
@@ -157,7 +155,6 @@ def scan_network(ip_range):
 def command_controller(message):
     userId = message.from_user.id
     comando = message.text.split(' ', 1)[0]
-    messageId = message.id
     
     # Verificación de administrador
     if not is_admin(userId):

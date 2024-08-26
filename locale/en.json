@@ -7,6 +7,7 @@
     "error_ip_range": "❌ Error in IP range, should be something like 192.168.1.1-192.168.1.255",
     "error_delete_not_valid_ip": "❌ Please, provide a valid IP. Example: /delete 192.168.1.101",
     "error_rename_invalid_format": "❌ Error renaming device.\nUsage: /rename <IP> <name>\n\nExample: `/rename 192.168.1.23 Mom's PC`\n\nThe name must not contain {} or \"",
+    "error_multiple_admin_only_with_group": "Multiple administrators can only be specified if used in a group (using the TELEGRAM_GROUP variable)",
     "error_sending_message": "Could not send message to $1: $2. Error: [$3]",
     "error_scanning_network": "Error scanning network [$1]",
     "debug_starting_bot": "Starting IntruBot (v$1)",
