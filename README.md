@@ -31,7 +31,7 @@ Lleva el control de los dispositivos que se conectan a tu red.
 |TELEGRAM_THREAD |❌| Thread del tema dentro de un supergrupo; valor numérico (2,3,4..). Por defecto 1. Se utiliza en conjunción con la variable TELEGRAM_GROUP |
 |TZ |✅| Timezone (Por ejemplo Europe/Madrid) |
 |IP_RANGE |✅| Rango de IPs a detectar. Por ejemplo 192.168.1.1-192.168.1.255 | 
-|LANGUAGE |❌| Idioma, puede ser ES / EN / NL / DE. Por defecto es ES (Spanish) |
+|LANGUAGE |❌| Idioma, puede ser ES / EN. Por defecto es ES (Spanish) |
 
 ### Anotaciones
 Será necesario mapear un volumen para almacenar lo que el bot escribe en /app/data
