@@ -8,7 +8,7 @@
 ![Github forks](https://badgen.net/github/forks/dgongut/intrubot?icon=github&label=forks)
 ![Github last-commit](https://img.shields.io/github/last-commit/dgongut/intrubot)
 ![Github last-commit](https://badgen.net/github/license/dgongut/intrubot)
-![alt text](https://github.com/dgongut/pictures/blob/main/intrubot/mockup.png)
+![alt text](https://github.com/dgongut/pictures/blob/main/IntruBot/mockup.png)
 
 Lleva el control de los dispositivos que se conectan a tu red.
 
