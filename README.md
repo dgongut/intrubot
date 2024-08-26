@@ -80,8 +80,7 @@ intrubot/
     ├── docker-compose.yaml
     └── locale
         ├── en.json
-        ├── es.json
-        └── nl.json
+        └── es.json
 ```
 
 Para levantarlo habría que ejecutar en esa ruta: `docker compose up -d`
