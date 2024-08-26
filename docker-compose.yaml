@@ -1,0 +1,11 @@
+services:
+    intrubot:
+        container_name: intrubot
+        env_file:
+        - .env
+        volumes:
+            - /mnt/user/temp/devices-data:/app/data # CAMBIAR LA PARTE IZQUIERDA
+        build:
+          context: .
+          dockerfile: ./Dockerfile_local
+        tty: true
