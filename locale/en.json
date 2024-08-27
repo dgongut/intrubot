@@ -4,6 +4,7 @@
     "error_bot_telegram_admin_anonymous": "You cannot be anonymous to control the bot. In the variable TELEGRAM_ADMIN you have to put your user id.",
     "error_bot_telegram_thread": "The variable TELEGRAM_THREAD is the thread within a supergroup, it is a numeric value. It has been set to $1.",
     "error_bot_token": "You need to configure the bot token with the TELEGRAM_TOKEN variable",
+    "error_hours_between_scans": "HOURS_BETWEEN_SCANS variable must be a number greater than 0",
     "error_ip_range": "❌ Error in IP range, should be something like 192.168.1.1-192.168.1.255",
     "error_delete_not_valid_ip": "❌ Please, provide a valid IP. Example: /delete 192.168.1.101",
     "error_rename_invalid_format": "❌ Error renaming device.\nUsage: /rename <IP> <name>\n\nExample: `/rename 192.168.1.23 Mom's PC`\n\nThe name must not contain {} or \"",
@@ -28,8 +29,12 @@
     "known_devices": "📝 Known devices (click on an IP address to copy it):\n\n$1",
     "not_known_devices": "There are not known devices",
     "known_devices_deleted": "🗑️ All known devices have been deleted",
+    "scanning": "Scanning...",
+    "sleeping_hours": "Next scan in $1 hours",
+    "scanning_between_hours": "$1 hours",
     "unknown": "Unknown",
     "user_not_admin": "❌ This bot does not belong to you.\n\nIf you want to detect intruders on your network via telegram deploy me on your server.\n\nTake a look at [DockerHub](https://hub.docker.com/r/dgongut/intrubot) where you will find a docker-compose. \n\nAre you curious? The code is published on [GitHub](https://github.com/dgongut/intrubot).\n\nIf you have questions, ask me, I'm @dgongut",
     "version": "⚙️ _Version: $1_\nDeveloped with ❤️ by @dgongut\n\nIf you find any bugs or suggestions, contact me.\n\nYou can find everything related to this bot at [DockerHub](https://hub.docker.com/r/dgongut/intrubot) or on [GitHub](https://github.com/dgongut/intrubot).",
+    "warning_new_device_detected": "New device detected IP [$1]",
     "warning_not_admin": "User $1 (@$2) is not an administrator and has tried to use the bot."
 }

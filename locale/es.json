@@ -4,6 +4,7 @@
     "error_bot_telegram_admin_anonymous": "No puedes ser anónimo para controlar el bot. En la variable TELEGRAM_ADMIN has de poner tu user id.",
     "error_bot_telegram_thread": "La variable TELEGRAM_THREAD es el tema dentro de un supergrupo, es un valor numérico. Se ha configurado como $1.",
     "error_bot_token": "Se necesita configurar el token del bot con la variable TELEGRAM_TOKEN",
+    "error_hours_between_scans": "La variable HOURS_BETWEEN_SCANS debe ser un número mayor que 0",
     "error_ip_range": "❌ Error en el rango de IPs, debe ser algo como 192.168.1.1-192.168.1.255",
     "error_delete_not_valid_ip": "❌ Por favor, proporciona una IP válida. Ejemplo: /delete 192.168.1.101",
     "error_rename_invalid_format": "❌ Error al renombrar el dispositivo.\nUso: /rename <IP> <nombre>\n\nEjemplo: `/rename 192.168.1.23 Ordenador de mamá`\n\nEl nombre no puede contener llaves {} o comillas \"",
@@ -28,8 +29,12 @@
     "known_devices": "📝 Dispositivos conocidos (haz click en la dirección IP para copiarla):\n\n$1",
     "not_known_devices": "No hay dispositivos conocidos",
     "known_devices_deleted": "🗑️ Todos los dispositivos conocidos han sido borrados",
+    "scanning": "Escaneando...",
+    "sleeping_hours": "Próximo escaneo en $1 horas",
+    "scanning_between_hours": "$1 horas",
     "unknown": "Desconocido",
     "user_not_admin": "❌ Este bot no te pertenece.\n\nSi quieres controlar los intrusos en tu red a través de Telegram despliégame en tu servidor.\n\nEcha un vistazo en [DockerHub](https://hub.docker.com/r/dgongut/intrubot) donde encontrarás un docker-compose. \n\n¿Eres curioso? El código se encuentra publicado en [GitHub](https://github.com/dgongut/intrubot).\n\nSi tienes dudas, pregúntame, soy @dgongut",
     "version": "⚙️ _Versión: $1_\nDesarrollado con ❤️ por @dgongut\n\nSi encuentras cualquier fallo o sugerencia contáctame.\n\nPuedes encontrar todo lo relacionado con este bot en [DockerHub](https://hub.docker.com/r/dgongut/intrubot) o en [GitHub](https://github.com/dgongut/intrubot).",
+    "warning_new_device_detected": "Se ha detectado un nuevo disposivo con la IP [$1]",
     "warning_not_admin": "El usuario $1 (@$2) no es un administrador y ha tratado de usar el bot."
 }

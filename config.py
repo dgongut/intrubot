@@ -7,6 +7,7 @@ TELEGRAM_GROUP = os.environ.get("TELEGRAM_GROUP")
 TELEGRAM_THREAD = os.environ.get("TELEGRAM_THREAD")
 IP_RANGE = os.environ.get("IP_RANGE")
 LANGUAGE = os.environ.get("LANGUAGE")
+HOURS_BETWEEN_SCANS = int(os.environ.get("HOURS_BETWEEN_SCANS"))
 
 ANONYMOUS_USER_ID = "1087968824"
 DATA_PATH = "/app/data"

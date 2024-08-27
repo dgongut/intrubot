@@ -10,7 +10,7 @@ from datetime import datetime
 from config import *
 from ipaddress import ip_address
 
-VERSION = "0.9.0"
+VERSION = "1.0.0 🚀"
 
 def debug(message):
     print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} - DEBUG: {message}')
@@ -73,6 +73,10 @@ if "abc" == IP_RANGE:
     error(get_text("error_ip_range"))
     sys.exit(1)
 
+if HOURS_BETWEEN_SCANS <= 0:
+    error(get_text("error_hours_between_scans"))
+    sys.exit(1)
+
 # Inicializa el bot de Telegram
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -114,7 +118,7 @@ def scan_ip(ip):
     answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
 
     for element in answered_list:
-        device_ip = element[1].psrc
+        device_ip = str(element[1].psrc)
 
         # Obtener el nombre del dispositivo
         device_name = get_device_name(device_ip)
@@ -124,6 +128,7 @@ def scan_ip(ip):
         device_name = sanitize_name(device_name)
         # Si es un dispositivo nuevo, envía una notificación
         if device_ip not in known_devices:
+            warning(get_text("warning_new_device_detected", device_ip))
             known_devices[device_ip] = device_name
             known_devices = dict(sorted(
                 known_devices.items(),
@@ -137,6 +142,7 @@ def scan_ip(ip):
 
 # Función para dividir el rango de IPs y escanear cada una
 def scan_network(ip_range):
+    global known_devices
     try:
         # Dividir el rango por el guion
         start_ip_str, end_ip_str = ip_range.split('-')
@@ -147,9 +153,10 @@ def scan_network(ip_range):
 
         # Iteramos sobre cada IP en el rango
         for ip in range(int(start_ip), int(end_ip) + 1):
-            scan_ip(ip_address(ip))
+            if str(ip_address(ip)) not in known_devices:
+                scan_ip(ip_address(ip))
     except ValueError as e:
-        error(f"Error al procesar el rango de IPs: {e}")
+        error(get_text("error_ip_range"))
 
 @bot.message_handler(commands=["start", "list", "deleteall", "delete", "rename", "version", "donate"])
 def command_controller(message):
@@ -241,10 +248,12 @@ def command_controller(message):
 def monitor_network():    
     while True:
         try:
+            debug(get_text("scanning"))
             scan_network(IP_RANGE)
         except Exception as e:
             error(get_text("error_scanning_network", e))
-        time.sleep(60)  # Escanea la red cada 60 segundos
+        debug(get_text("sleeping_hours", HOURS_BETWEEN_SCANS))
+        time.sleep(HOURS_BETWEEN_SCANS * 3600)
 
 def sanitize_name(text):
     special_chars = {
@@ -280,7 +289,6 @@ if __name__ == '__main__':
         telebot.types.BotCommand("/version", get_text("menu_version")),
         telebot.types.BotCommand("/donate", get_text("menu_donate"))
         ])
-    starting_message = f"🫡 *IntruBot\n🟢 {get_text('active')}*"
-    starting_message += f"\n_⚙️ v{VERSION}_"
+    starting_message = f"🫡 *IntruBot\n🟢 {get_text('active')}*\n🔄 {get_text('scanning_between_hours', HOURS_BETWEEN_SCANS)}\n_⚙️ v{VERSION}_"
     send_message(message=starting_message)
     bot.infinity_polling(timeout=60)

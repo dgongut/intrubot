@@ -31,6 +31,7 @@ Lleva el control de los dispositivos que se conectan a tu red.
 |TELEGRAM_THREAD |❌| Thread del tema dentro de un supergrupo; valor numérico (2,3,4..). Por defecto 1. Se utiliza en conjunción con la variable TELEGRAM_GROUP |
 |TZ |✅| Timezone (Por ejemplo Europe/Madrid) |
 |IP_RANGE |✅| Rango de IPs a detectar. Por ejemplo 192.168.1.1-192.168.1.255 | 
+|HOURS_BETWEEN_SCANS |❌| Horas entre escaneos. Por defecto 1 | 
 |LANGUAGE |❌| Idioma, puede ser ES / EN. Por defecto es ES (Spanish) |
 
 ### Anotaciones
@@ -49,6 +50,7 @@ services:
             - IP_RANGE=
             #- TELEGRAM_GROUP=
             #- TELEGRAM_THREAD=1
+            #- HOURS_BETWEEN_SCANS=1
             #- LANGUAGE=ES
         volumes:
             - /ruta/para/guardar/los/datos:/app/data # CAMBIAR LA PARTE IZQUIERDA
