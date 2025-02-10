@@ -9,8 +9,9 @@ import socket
 from datetime import datetime
 from config import *
 from ipaddress import ip_address
+import subprocess
 
-VERSION = "1.0.0 🚀"
+VERSION = "1.0.1"
 
 def debug(message):
     print(f'{datetime.now().strftime("%Y-%m-%d %H:%M:%S")} - DEBUG: {message}')
@@ -109,7 +110,10 @@ def get_device_name(ip):
     except socket.herror:
         return get_text("unknown")  # No se pudo obtener el nombre de host
 
-# Función para escanear una IP
+def ping_ip(ip):
+    result = subprocess.run(["ping", "-c", "1", "-W", "1", ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    return result.returncode == 0
+
 def scan_ip(ip):
     global known_devices
     arp_request = scapy.ARP(pdst=str(ip))
@@ -117,28 +121,32 @@ def scan_ip(ip):
     arp_request_broadcast = broadcast / arp_request
     answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
 
-    for element in answered_list:
-        device_ip = str(element[1].psrc)
-
-        # Obtener el nombre del dispositivo
-        device_name = get_device_name(device_ip)
-        if device_name == device_ip:
-            device_name = get_text("unknown")
-
-        device_name = sanitize_name(device_name)
-        # Si es un dispositivo nuevo, envía una notificación
-        if device_ip not in known_devices:
-            warning(get_text("warning_new_device_detected", device_ip))
-            known_devices[device_ip] = device_name
-            known_devices = dict(sorted(
-                known_devices.items(),
-                key=lambda item: int(ip_address(item[0])) # Ordenamos los valores antes de guardarlos
-            ))
-            if device_name == get_text("unknown"):
-                send_message(message=get_text("new_device_detected_without_name", device_ip))
-            else:
-                send_message(message=get_text("new_device_detected", device_ip, device_name))
-            save_known_devices()  # Guardamos el nuevo dispositivo en el archivo JSON
+    if answered_list:  # Si hay respuesta por ARP
+        device_ip = str(answered_list[0][1].psrc)
+    elif ping_ip(str(ip)):  # Si no responde ARP, intenta con ping
+        device_ip = str(ip)
+    else:
+        return  # No hay respuesta ni por ARP ni por Ping
+    
+    # Obtener el nombre del dispositivo
+    device_name = get_device_name(device_ip)
+    if device_name == device_ip:
+        device_name = get_text("unknown")
+    
+    device_name = sanitize_name(device_name)
+    # Si es un dispositivo nuevo, envía una notificación
+    if device_ip not in known_devices:
+        warning(get_text("warning_new_device_detected", device_ip))
+        known_devices[device_ip] = device_name
+        known_devices = dict(sorted(
+            known_devices.items(),
+            key=lambda item: int(ip_address(item[0]))  # Ordenamos los valores antes de guardarlos
+        ))
+        if device_name == get_text("unknown"):
+            send_message(message=get_text("new_device_detected_without_name", device_ip))
+        else:
+            send_message(message=get_text("new_device_detected", device_ip, device_name))
+        save_known_devices()  # Guardamos el nuevo dispositivo en el archivo JSON
 
 # Función para dividir el rango de IPs y escanear cada una
 def scan_network(ip_range):
