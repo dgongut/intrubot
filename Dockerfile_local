@@ -11,8 +11,8 @@ ENV LANGUAGE ES
 ENV TZ UTC
 
 RUN apk add --no-cache python3 py3-pip tzdata
-RUN pip3 install pyTelegramBotAPI==4.22.1
-RUN pip3 install scapy==2.5.0
+RUN pip3 install pyTelegramBotAPI==4.27.0
+RUN pip3 install scapy==2.6.1
 
 WORKDIR /app
 COPY . .

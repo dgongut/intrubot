@@ -10,7 +10,7 @@ ENV IP_RANGE abc
 ENV LANGUAGE ES
 ENV TZ UTC
 
-ARG VERSION=1.0.1
+ARG VERSION=1.0.2
 
 WORKDIR /app
 RUN wget https://github.com/dgongut/intrubot/archive/refs/tags/v${VERSION}.tar.gz -P /tmp
@@ -19,8 +19,8 @@ RUN mv intrubot-${VERSION}/* /app
 RUN rm /tmp/v${VERSION}.tar.gz
 RUN rm -rf intrubot-${VERSION}/
 RUN apk add --no-cache python3 py3-pip tzdata
-RUN pip3 install pyTelegramBotAPI==4.22.1
-RUN pip3 install scapy==2.5.0
+RUN pip3 install pyTelegramBotAPI==4.27.0
+RUN pip3 install scapy==2.6.1
 
 WORKDIR /app
 COPY . .
