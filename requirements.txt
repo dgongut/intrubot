@@ -1,0 +1,3 @@
+requests==2.34.2
+pyTelegramBotAPI==4.37.0
+scapy==2.7.0

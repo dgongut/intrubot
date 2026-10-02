@@ -1,0 +1,22 @@
+# Compose de desarrollo: construye la imagen desde Dockerfile_local y usa el .env
+# Levantar con: docker compose -f docker-compose.local.yaml up -d --build --force-recreate
+services:
+    intrubot:
+        build:
+            context: .
+            dockerfile: Dockerfile_local
+        container_name: intrubot-dev
+        restart: unless-stopped
+        network_mode: host
+        tty: true
+        env_file:
+            - .env
+        volumes:
+            - ./data:/app/data # Dispositivos conocidos
+            - ./intrubot.py:/app/intrubot.py # Recarga automática con watchmedo
+            - ./config.py:/app/config.py
+            - ./devices.py:/app/devices.py
+            - ./scanner.py:/app/scanner.py
+            - ./logger.py:/app/logger.py
+            - ./message_queue.py:/app/message_queue.py
+            - ./locale:/app/locale

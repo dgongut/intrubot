@@ -1,11 +1,20 @@
 services:
     intrubot:
-        container_name: intrubot
-        env_file:
-        - .env
+        environment:
+            - TELEGRAM_TOKEN=
+            - TELEGRAM_ADMIN=
+            - TZ=Europe/Madrid
+            - IP_RANGE=192.168.1.0/24
+            #- NETWORKS=Casa=192.168.1.0/24; IoT=192.168.20.0/24 # En lugar de IP_RANGE, para varias redes (ver README)
+            #- TELEGRAM_GROUP=
+            #- TELEGRAM_THREAD=1
+            #- HOURS_BETWEEN_SCANS=1
+            #- NETWORK_INTERFACE=
+            #- LANGUAGE=ES
         volumes:
-            - /mnt/user/temp/devices-data:/app/data # CAMBIAR LA PARTE IZQUIERDA
-        build:
-          context: .
-          dockerfile: ./Dockerfile_local
+            - ./data:/app/data # Dispositivos conocidos
+        image: dgongut/intrubot:latest
+        container_name: intrubot
+        restart: always
+        network_mode: host # Imprescindible: el escaneo ARP necesita ver la red local
         tty: true
