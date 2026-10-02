@@ -12,7 +12,7 @@ HOURS_BETWEEN_SCANS = os.environ.get("HOURS_BETWEEN_SCANS", "1")
 NETWORK_INTERFACE = os.environ.get("NETWORK_INTERFACE")  # Interface for IP_RANGE. Empty = the one routing it
 
 # CONSTANTS
-VERSION = "2.0.0"
+VERSION = "2.0.1"
 ANONYMOUS_USER_ID = "1087968824"
 DONORS_URL = "https://donate.dgongut.com/donors.json"
 LOCALE_PATH = os.environ.get("LOCALE_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "locale"))

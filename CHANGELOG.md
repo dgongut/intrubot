@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.0.1
+
+### 🐛 Correcciones
+
+- **El bot no detectaba ningún dispositivo en algunos servidores.** Descartaba las direcciones que, según la tabla de rutas que lee scapy, solo eran alcanzables a través del router. Pero scapy solo lee las tablas `local` y `main`: en equipos con rutas en otras tablas (rutas por políticas), la propia red local parecía estar detrás del router y no se escaneaba. Ahora las rutas solo sirven para elegir la interfaz, y una red solo se da por inalcanzable si no responde nadie.
+- **Ya no se escanea la propia IP del servidor**, que nunca responde a su propio ARP.
+
+### 🔧 Cambios
+
+- **Fuera `tty: true`** de los docker-compose y del README: la imagen ya escribe los logs al momento sin él. Si lo tienes puesto no molesta.
+
 ## v2.0.0
 
 Reescritura completa del bot. Mantén el mismo volumen `/app/data` y la actualización es automática (ver [Migración desde 1.x](#migración-desde-1x)).

@@ -102,7 +102,6 @@ services:
         container_name: intrubot
         restart: always
         network_mode: host
-        tty: true
 ```
 
 ## Anotaciones
@@ -126,7 +125,7 @@ Un solo bot puede vigilar varias redes a la vez. Usa `NETWORKS` en lugar de `IP_
 
 ### Requisito: una interfaz en cada VLAN
 
-El ARP **no atraviesa routers**. El bot solo puede ver una red si el contenedor tiene una interfaz dentro de ella. Si a una red solo se llega a través del router, el bot te avisa y no la escanea (si lo hiciera, solo vería la MAC del router). Hay dos formas de darle esas interfaces:
+El ARP **no atraviesa routers**. El bot solo puede ver una red si el contenedor tiene una interfaz dentro de ella. Si en una red no responde nadie y, según la tabla de rutas, solo se llega a ella a través del router, el bot te avisa de que no la puede ver. Hay dos formas de darle esas interfaces:
 
 **1. `network_mode: host` y una subinterfaz por VLAN en el equipo.** El puerto del switch al que va conectado el servidor tiene que llevar esas VLAN etiquetadas (modo trunk). En Linux, por ejemplo, para la VLAN 20:
 
@@ -153,7 +152,6 @@ services:
         image: dgongut/intrubot:latest
         container_name: intrubot
         restart: always
-        tty: true
         networks:
             casa:
                 ipv4_address: 192.168.1.250
@@ -196,6 +194,7 @@ La 2.0 se ha reescrito por completo. Mantén el mismo volumen `/app/data` y el b
 
 - Los dispositivos ya conocidos **no** se notificarán como nuevos y recuperan el nombre que les pusiste en cuanto aparecen en un escaneo.
 - Los comandos `/delete`, `/deleteall` y `/rename` desaparecen: ahora todo se hace con botones desde `/list`.
+- **`tty: true` ya no hace falta.** Hasta la 1.x el compose lo llevaba para que los logs del bot salieran en `docker logs`; desde la 2.0 la imagen los escribe al momento sin él. Puedes quitarlo, o dejarlo: no molesta.
 - Las variables `IP_RANGE` y `HOURS_BETWEEN_SCANS` siguen funcionando igual. `IP_RANGE` acepta además redes CIDR y varias entradas separadas por comas, y si tienes varias VLAN puedes pasarte a `NETWORKS`.
 
 ## Solo para desarrolladores

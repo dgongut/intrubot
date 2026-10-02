@@ -17,4 +17,3 @@ services:
         container_name: intrubot
         restart: always
         network_mode: host # Imprescindible: el escaneo ARP necesita ver la red local
-        tty: true

@@ -9,6 +9,11 @@ container runs with network_mode: host (or attached to a macvlan per VLAN).
 ARP does not cross routers: a network is only visible from an interface that
 sits on it. Each network is swept through the interface its addresses route
 to, so one container watches as many VLANs as it has legs in.
+
+The routing table only picks the interface, it never rules addresses out:
+scapy reads the local and main tables alone, so on hosts with policy routing
+the LAN itself looks reachable only through the router. Whether a network is
+really out of reach is decided by nobody answering.
 """
 
 import socket
@@ -179,24 +184,27 @@ def resolve_hostnames(ips):
 
 
 def group_by_interface(network):
-	"""{interface: addresses} to sweep, plus the addresses left out because
-	they are only reachable through a router (with the first such router).
-	An interface set in the configuration is trusted as is: it may be a VLAN
-	leg with no IP of its own, which the routing table knows nothing about"""
+	"""{interface: addresses} to sweep, plus the addresses whose route goes
+	through a router (with the first such router). Those are swept anyway
+	through that route's interface, see the module docstring. The addresses of
+	this machine are left out: it never answers its own ARP. An interface set
+	in the configuration is trusted as is: it may be a VLAN leg with no IP of
+	its own, which the routing table knows nothing about"""
 	if network.interface:
 		return {network.interface: network.addresses}, [], None
 	conf.route.resync()  # Interfaces may have come up after the bot started
 	groups = {}
-	unreachable = []
+	routed = []
 	gateway = None
 	for address in network.addresses:
-		interface, _, route_gateway = conf.route.route(address)
-		if route_gateway != "0.0.0.0" or interface == conf.loopback_name:
-			unreachable.append(address)
-			gateway = gateway or route_gateway
+		interface, source, route_gateway = conf.route.route(address)
+		if interface == conf.loopback_name or address == source:
 			continue
+		if route_gateway != "0.0.0.0":
+			routed.append(address)
+			gateway = gateway or route_gateway
 		groups.setdefault(interface, []).append(address)
-	return groups, unreachable, gateway
+	return groups, routed, gateway
 
 
 def _sweep(addresses, interface):
@@ -207,14 +215,11 @@ def _sweep(addresses, interface):
 
 def arp_scan(network):
 	"""{mac: ip} of every address of the network that answers. Raises
-	NotConnectedError when no address is on a link of this host,
-	PermissionError without raw socket access and ValueError/OSError when the
-	interface does not exist"""
-	groups, unreachable, gateway = group_by_interface(network)
-	if not groups:
-		raise NotConnectedError(gateway)
-	if unreachable:
-		warning(f"Network {network.name}: {len(unreachable)} addresses are only reachable through {gateway} and are not scanned")
+	NotConnectedError when nothing answers and every address routes through a
+	router, PermissionError without raw socket access and ValueError/OSError
+	when the interface does not exist"""
+	groups, routed, gateway = group_by_interface(network)
+	swept = sum(len(addresses) for addresses in groups.values())
 	found = {}
 	for interface, addresses in groups.items():
 		for mac, ip in _sweep(addresses, interface):
@@ -228,4 +233,6 @@ def arp_scan(network):
 				warning(f"{mac} answers for {found[mac]} and {ip} in {network.name}")
 				continue
 			found[mac] = ip
+	if not found and routed and len(routed) == swept:
+		raise NotConnectedError(gateway)
 	return found

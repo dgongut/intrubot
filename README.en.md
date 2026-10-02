@@ -102,7 +102,6 @@ services:
         container_name: intrubot
         restart: always
         network_mode: host
-        tty: true
 ```
 
 ## Notes
@@ -126,7 +125,7 @@ A single bot can watch several networks at once. Use `NETWORKS` instead of `IP_R
 
 ### Requirement: an interface on each VLAN
 
-ARP **does not cross routers**. The bot can only see a network if the container has an interface inside it. When a network is only reachable through the router, the bot warns you and does not scan it (if it did, it would only see the router's MAC). There are two ways to give it those interfaces:
+ARP **does not cross routers**. The bot can only see a network if the container has an interface inside it. When nobody answers on a network and, according to the routing table, it is only reachable through the router, the bot warns you that it cannot see it. There are two ways to give it those interfaces:
 
 **1. `network_mode: host` and one subinterface per VLAN on the machine.** The switch port the server is plugged into must carry those VLANs tagged (trunk mode). On Linux, for example, for VLAN 20:
 
@@ -153,7 +152,6 @@ services:
         image: dgongut/intrubot:latest
         container_name: intrubot
         restart: always
-        tty: true
         networks:
             home:
                 ipv4_address: 192.168.1.250
@@ -196,6 +194,7 @@ networks:
 
 - Devices it already knew are **not** reported as new, and they get back the name you gave them as soon as they show up in a scan.
 - The `/delete`, `/deleteall` and `/rename` commands are gone: everything is done with buttons from `/list`.
+- **`tty: true` is no longer needed.** Up to 1.x the compose carried it so the bot's logs showed up in `docker logs`; from 2.0 the image writes them straight away without it. You can remove it, or leave it: it does no harm.
 - `IP_RANGE` and `HOURS_BETWEEN_SCANS` work as before. `IP_RANGE` now also accepts CIDR networks and several comma separated entries, and if you have several VLANs you can move to `NETWORKS`.
 
 ## Developers only
