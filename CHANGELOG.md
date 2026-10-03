@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.0.2
+
+### 🐛 Correcciones
+
+- **Vuelven a verse las redes a las que solo se llega a través del router.** La 2.0 cambió el ARP + ping de la 1.x por un barrido ARP, y el ARP no atraviesa routers: una VLAN en la que el servidor no tiene interfaz quedaba vacía. Ahora, si en una red no responde nadie por ARP y solo se llega a ella por el router, o la interfaz que indica la tabla de rutas no existe (`[Errno 19] No such device`), el bot hace ping a todas sus direcciones a la vez. Por el router no llega la MAC, así que esos dispositivos se identifican por su IP y su ficha lo indica; los que no responden al ping no se ven. Si más adelante la red se ve por ARP, cada dispositivo pasa a identificarse por su MAC sin perder su nombre y sin volver a avisar.
+- **Un error de escaneo ya no se avisa en cada escaneo.** Solo se recordaba el último error de cada red, así que una red que alternaba entre dos errores distintos avisaba cada hora. Ahora cada error se avisa una vez mientras dure el fallo.
+- **El log indica por qué interfaz falló el escaneo**, que el error por sí solo («No such device») no lo dice.
+
 ## v2.0.1
 
 ### 🐛 Correcciones

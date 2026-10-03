@@ -55,6 +55,8 @@ Lleva el control de los dispositivos que se conectan a tu red.
 
 Cada `HOURS_BETWEEN_SCANS` horas el bot lanza una petición ARP a todas las direcciones vigiladas (`IP_RANGE`, o cada red de `NETWORKS`). Todo dispositivo IPv4 de la red local tiene que responder a ARP (aunque tenga cortafuegos y no conteste al ping), y la respuesta trae su MAC, que es lo que lo identifica.
 
+Si una red solo es accesible a través del router (o la interfaz que indica la tabla de rutas no existe), el ARP no llega y el bot recurre al ping, como hacía la 1.x. Ver [Requisito: una interfaz en cada VLAN](#requisito-una-interfaz-en-cada-vlan).
+
 - El **primer escaneo** registra los dispositivos conectados sin avisar de cada uno y te envía un resumen. Es el momento de ponerles nombre.
 - A partir de ahí, cada dispositivo con una MAC nueva genera un aviso con botones para **renombrarlo** o ver sus **detalles**.
 - Si en un escaneo aparecen más de 5 dispositivos nuevos, recibes un único resumen en lugar de un mensaje por cada uno.
@@ -125,7 +127,13 @@ Un solo bot puede vigilar varias redes a la vez. Usa `NETWORKS` en lugar de `IP_
 
 ### Requisito: una interfaz en cada VLAN
 
-El ARP **no atraviesa routers**. El bot solo puede ver una red si el contenedor tiene una interfaz dentro de ella. Si en una red no responde nadie y, según la tabla de rutas, solo se llega a ella a través del router, el bot te avisa de que no la puede ver. Hay dos formas de darle esas interfaces:
+El ARP **no atraviesa routers**. Si en una red no responde nadie por ARP y, según la tabla de rutas, solo se llega a ella a través del router, el bot hace ping a sus direcciones. Funciona sin tocar nada, pero con límites:
+
+- A través del router no llega la MAC, así que esos dispositivos se identifican por su IP: si el DHCP le cambia la IP a uno, se avisará como nuevo. Tampoco se conoce su fabricante.
+- Los dispositivos que no responden al ping (móviles en reposo, equipos con cortafuegos) no se ven.
+- Si en esa red no responde nadie ni al ping, el bot te avisa de que no la puede ver.
+
+Para verlo todo, con su MAC, el contenedor necesita una interfaz dentro de esa red. Cuando la tenga, los dispositivos que ya conocía por IP pasan a identificarse por su MAC sin perder el nombre y sin volver a avisar. Hay dos formas de darle esas interfaces:
 
 **1. `network_mode: host` y una subinterfaz por VLAN en el equipo.** El puerto del switch al que va conectado el servidor tiene que llevar esas VLAN etiquetadas (modo trunk). En Linux, por ejemplo, para la VLAN 20:
 

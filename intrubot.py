@@ -124,6 +124,8 @@ def mac_id(mac):
 
 
 def mac_from_id(mac_short):
+	if "." in mac_short:  # Device found by ping, identified by its IP
+		return mac_short
 	return ":".join(mac_short[i:i + 2] for i in range(0, len(mac_short), 2))
 
 
@@ -260,9 +262,12 @@ def device_lines(device):
 	if MULTI_NETWORK:
 		lines.append(get_text("DEVICE_NETWORK", html.escape(device["network"])))
 	lines.append(get_text("DEVICE_IP", html.escape(device["ip"])))
-	mac_line = get_text("DEVICE_MAC", html.escape(device["mac"]))
-	if scanner.is_random_mac(device["mac"]):
-		mac_line += f" {get_text('DEVICE_MAC_RANDOM')}"
+	if scanner.is_mac(device["mac"]):
+		mac_line = get_text("DEVICE_MAC", html.escape(device["mac"]))
+		if scanner.is_random_mac(device["mac"]):
+			mac_line += f" {get_text('DEVICE_MAC_RANDOM')}"
+	else:
+		mac_line = get_text("DEVICE_MAC_ROUTED")
 	lines.append(mac_line)
 	if device.get("vendor"):
 		lines.append(get_text("DEVICE_VENDOR", html.escape(device["vendor"])))
@@ -297,7 +302,7 @@ def devices_call():
 
 _scan_lock = threading.Lock()
 _next_scan_at = None
-_scan_errors = {}  # network name -> error text last reported, so a failing scan is not reported every round
+_scan_errors = {}  # network name -> error texts reported since it started failing, so a failing scan is not reported every round
 MAX_NEW_DEVICE_MESSAGES = 5  # Above this, the new devices of a scan go in one summary
 
 
@@ -358,18 +363,21 @@ def run_scan():
 
 
 def report_scan_errors(results):
-	"""Notifies an error only when it differs from the last one of that network
-	(and once per scan: a missing permission fails every network alike), and
-	gathers the networks that work again in a single message"""
+	"""Notifies each error once while a network keeps failing (and once per
+	scan: a missing permission fails every network alike), and gathers the
+	networks that work again in a single message. Remembering only the last
+	error is not enough: a flapping interface alternates between two errors
+	and each change was reported again, every scan"""
 	sent = set()
 	recovered = []
 	for network, _, _, _, failure in results:
 		previous = _scan_errors.get(network.name)
 		if failure:
-			_scan_errors[network.name] = failure
-			if failure != previous and failure not in sent:
+			reported = _scan_errors.setdefault(network.name, set())
+			if failure not in reported and failure not in sent:
 				sent.add(failure)
 				notify(failure)
+			reported.add(failure)
 		elif previous:
 			del _scan_errors[network.name]
 			recovered.append(network)

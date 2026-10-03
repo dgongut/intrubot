@@ -55,6 +55,8 @@ Looking for it on [![](https://badgen.net/badge/icon/docker?icon=docker&label)](
 
 Every `HOURS_BETWEEN_SCANS` hours the bot sends an ARP request to every watched address (`IP_RANGE`, or each network in `NETWORKS`). Every IPv4 device on the local network has to answer ARP (even behind a firewall that ignores ping), and the answer carries its MAC, which is what identifies it.
 
+When a network is only reachable through the router (or the interface the routing table points to does not exist), ARP cannot reach it and the bot falls back to ping, as 1.x did. See [Requirement: an interface on each VLAN](#requirement-an-interface-on-each-vlan).
+
 - The **first scan** registers the connected devices without reporting each one and sends you a summary. That is the moment to name them.
 - From then on, every device with a new MAC triggers an alert with buttons to **rename** it or see its **details**.
 - When more than 5 new devices show up in one scan, you get a single summary instead of one message each.
@@ -125,7 +127,13 @@ A single bot can watch several networks at once. Use `NETWORKS` instead of `IP_R
 
 ### Requirement: an interface on each VLAN
 
-ARP **does not cross routers**. The bot can only see a network if the container has an interface inside it. When nobody answers on a network and, according to the routing table, it is only reachable through the router, the bot warns you that it cannot see it. There are two ways to give it those interfaces:
+ARP **does not cross routers**. When nobody answers ARP on a network and, according to the routing table, it is only reachable through the router, the bot pings its addresses instead. It works without touching anything, within limits:
+
+- No MAC comes back across the router, so those devices are identified by their IP: if DHCP gives one a new IP, it is reported as new. Their vendor is unknown too.
+- Devices that ignore ping (sleeping phones, firewalled machines) are not seen.
+- If nobody on that network answers ping either, the bot warns you that it cannot see it.
+
+To see everything, with MACs, the container needs an interface inside that network. Once it has one, the devices it knew by IP switch to their MAC, keeping their names and without being reported again. There are two ways to give it those interfaces:
 
 **1. `network_mode: host` and one subinterface per VLAN on the machine.** The switch port the server is plugged into must carry those VLANs tagged (trunk mode). On Linux, for example, for VLAN 20:
 

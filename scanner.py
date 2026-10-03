@@ -14,14 +14,25 @@ The routing table only picks the interface, it never rules addresses out:
 scapy reads the local and main tables alone, so on hosts with policy routing
 the LAN itself looks reachable only through the router. Whether a network is
 really out of reach is decided by nobody answering.
+
+A network nobody answers on, behind a router, is pinged instead (as 1.x did):
+the kernel sends the echoes, routing with every table, and the router forwards
+them. No MAC comes back across a router, so those devices are identified by
+their IP, and the ones that ignore ping (phones asleep, firewalls) stay unseen.
+The same happens when the interface the routing table picks does not exist.
 """
 
+import errno
+import random
+import select
 import socket
+import struct
+import time
 from concurrent.futures import ThreadPoolExecutor, wait
 from ipaddress import ip_address, ip_network
 
 from config import ARP_RETRIES, ARP_TIMEOUT, HOSTNAME_LOOKUP_TIMEOUT, MAX_SCAN_ADDRESSES
-from logger import warning
+from logger import debug, warning
 
 # scapy prints its own warnings (missing IPv6 routes and the like) on import
 import logging
@@ -39,7 +50,8 @@ class NetworksError(ValueError):
 
 class NotConnectedError(Exception):
 	"""No address of the network is on a link of this host: they are only
-	reachable through a router, which answers ARP for none of them"""
+	reachable through a router, which answers ARP for none of them, and none
+	answers ping either"""
 	def __init__(self, gateway):
 		super().__init__(f"reachable only through the router {gateway}")
 		self.gateway = gateway
@@ -139,6 +151,11 @@ def parse_networks(networks_text, ip_range_text, interface, default_name):
 	return networks
 
 
+def is_mac(device_id):
+	"""Devices found by ping are identified by their IP instead of a MAC"""
+	return ":" in device_id
+
+
 def is_random_mac(mac):
 	"""Locally administered MAC: phones and laptops make one up per network
 	(private Wi-Fi address), so the vendor cannot be known from it"""
@@ -150,7 +167,7 @@ def is_random_mac(mac):
 
 def get_vendor(mac):
 	"""Manufacturer registered for the MAC prefix, None when unknown"""
-	if is_random_mac(mac):
+	if not is_mac(mac) or is_random_mac(mac):
 		return None
 	try:
 		_, vendor = conf.manufdb.lookup(mac)
@@ -213,16 +230,80 @@ def _sweep(addresses, interface):
 	return [(reply[ARP].hwsrc.lower(), reply[ARP].psrc) for _, reply in answered]
 
 
+def _checksum(data):
+	if len(data) % 2:
+		data += b"\0"
+	total = sum(struct.unpack(f"!{len(data) // 2}H", data))
+	total = (total >> 16) + (total & 0xFFFF)
+	total += total >> 16
+	return ~total & 0xFFFF
+
+
+def _collect_echo_replies(sock, ident, addresses, alive, deadline):
+	"""Reads replies to our echoes until the deadline. A raw ICMP socket gets
+	every ICMP packet the host receives: ident tells ours apart, and the source
+	keeps each network to its own addresses when several are pinged at once"""
+	while True:
+		remaining = deadline - time.monotonic()
+		if not select.select([sock], [], [], max(0, remaining))[0]:
+			if remaining <= 0:
+				return
+			continue
+		packet, (source, _) = sock.recvfrom(1024)
+		header_length = (packet[0] & 0x0F) * 4
+		if len(packet) < header_length + 8:
+			continue
+		icmp_type, _, _, reply_ident, _ = struct.unpack("!BBHHH", packet[header_length:header_length + 8])
+		if icmp_type == 0 and reply_ident == ident and source in addresses:
+			alive.add(source)
+
+
+def _ping_sweep(addresses):
+	"""Addresses answering an ICMP echo, all pinged at once with the same
+	timeout and retries as ARP"""
+	address_set = set(addresses)
+	ident = random.getrandbits(16)
+	alive = set()
+	with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP) as sock:
+		for _ in range(ARP_RETRIES + 1):
+			pending = [address for address in addresses if address not in alive]
+			if not pending:
+				break
+			for sequence, address in enumerate(pending):
+				header = struct.pack("!BBHHH", 8, 0, 0, ident, sequence & 0xFFFF)
+				packet = struct.pack("!BBHHH", 8, 0, _checksum(header), ident, sequence & 0xFFFF)
+				try:
+					sock.sendto(packet, (address, 0))
+				except PermissionError:
+					raise
+				except OSError:
+					pass  # No route or host unreachable: it just does not answer
+				_collect_echo_replies(sock, ident, address_set, alive, time.monotonic())
+			_collect_echo_replies(sock, ident, address_set, alive, time.monotonic() + ARP_TIMEOUT)
+	return [address for address in addresses if address in alive]
+
+
 def arp_scan(network):
-	"""{mac: ip} of every address of the network that answers. Raises
-	NotConnectedError when nothing answers and every address routes through a
-	router, PermissionError without raw socket access and ValueError/OSError
-	when the interface does not exist"""
+	"""{device id: ip} of every address of the network that answers, the id
+	being its MAC or, for networks behind a router, its IP (see the module
+	docstring). Raises NotConnectedError when nothing answers and every address
+	routes through a router, PermissionError without raw socket access and
+	ValueError/OSError when the configured interface does not exist"""
 	groups, routed, gateway = group_by_interface(network)
 	swept = sum(len(addresses) for addresses in groups.values())
 	found = {}
+	interface_error = None
 	for interface, addresses in groups.items():
-		for mac, ip in _sweep(addresses, interface):
+		try:
+			replies = _sweep(addresses, interface)
+		except OSError as e:
+			# The error alone ("No such device") does not say which interface
+			warning(f"Cannot sweep {network.name} through {interface}: {e}")
+			if network.interface or e.errno != errno.ENODEV:
+				raise
+			interface_error = e
+			continue
+		for mac, ip in replies:
 			# A reply from outside the range: a device answering for an address
 			# it does not own (proxy ARP)
 			if ip not in network.address_set:
@@ -233,6 +314,11 @@ def arp_scan(network):
 				warning(f"{mac} answers for {found[mac]} and {ip} in {network.name}")
 				continue
 			found[mac] = ip
-	if not found and routed and len(routed) == swept:
-		raise NotConnectedError(gateway)
-	return found
+	if found or not (interface_error or (routed and len(routed) == swept)):
+		return found
+	addresses = [address for group in groups.values() for address in group]
+	alive = _ping_sweep(addresses)
+	if not alive:
+		raise interface_error or NotConnectedError(gateway)
+	debug(f"{network.name} does not answer ARP, {len(alive)} addresses answered ping")
+	return {ip: ip for ip in alive}

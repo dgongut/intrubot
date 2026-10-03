@@ -7,6 +7,11 @@ unnoticed and the old one was reported as new. The network is part of the key
 because routers and switches answer with the same MAC on every VLAN, and
 because a known laptop showing up in the IoT VLAN is news worth reporting.
 The 1.x file is migrated here (see _load_legacy).
+
+On networks behind a router no MAC is visible and the scanner finds devices
+by ping: their "mac" holds their IP instead (see scanner.is_mac). When the
+same network is later seen with ARP, or the other way round, a device is
+matched by its IP so it keeps its name and is not reported again.
 """
 
 import copy
@@ -18,6 +23,7 @@ from ipaddress import ip_address
 
 from config import DATA_PATH, DEVICES_FILE, LEGACY_DEVICES_FILE, MAX_NAME_LENGTH
 from logger import debug, error, warning
+from scanner import is_mac
 
 DEVICES_PATH = os.path.join(DATA_PATH, DEVICES_FILE)
 LEGACY_PATH = os.path.join(DATA_PATH, LEGACY_DEVICES_FILE)
@@ -166,10 +172,20 @@ def toggle_muted(network_name):
 		return state["muted"]
 
 
+def _same_ip_other_kind(network_name, device_id, ip):
+	"""Known device of the network at that IP identified the other way (MAC
+	when device_id is an IP, and vice versa)"""
+	for device in _devices.values():
+		if device["network"] == network_name and device.get("ip") == ip and is_mac(device["mac"]) != is_mac(device_id):
+			return device
+	return None
+
+
 def apply_scan(network_name, found, hostnames, vendor_of):
 	"""Updates the known devices of a network with a scan result ({mac: ip})
 	and returns the devices seen for the first time. The ones matching a 1.x
-	entry by IP get its name and are not reported as new"""
+	entry by IP get its name and are not reported as new, and so do the ones
+	matching by IP a device known the other way (ping or ARP)"""
 	now = int(time.time())
 	new_devices = []
 	with _lock:
@@ -178,6 +194,18 @@ def apply_scan(network_name, found, hostnames, vendor_of):
 				device["online"] = False
 		for mac, ip in found.items():
 			device = _devices.get(_key(network_name, mac))
+			if device is None:
+				known = _same_ip_other_kind(network_name, mac, ip)
+				if known is not None and not is_mac(mac):
+					# Seen by ping now: the device known by its MAC is still the best record
+					device = known
+				elif known is not None:
+					# Its MAC is visible at last: it replaces the record keyed by its IP
+					del _devices[_key(network_name, known["mac"])]
+					known["mac"] = mac
+					known["vendor"] = vendor_of(mac)
+					_devices[_key(network_name, mac)] = known
+					device = known
 			if device is None:
 				legacy_name = _legacy.pop(ip, None)
 				device = {
