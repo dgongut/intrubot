@@ -1,6 +1,6 @@
 FROM alpine:3.24.2
 
-ARG VERSION=2.0.2
+ARG VERSION=2.0.3
 
 # Without it Python buffers stdout when there is no tty and docker logs stays empty
 ENV TZ=UTC \
@@ -31,9 +31,9 @@ RUN unzip -q /tmp/app.zip -d /tmp && \
     export PIP_BREAK_SYSTEM_PACKAGES=1 && \
     pip3 install --no-cache-dir -r /app/requirements.txt
 
-# Health check: unhealthy when Telegram has not answered a poll for 2 minutes
+# Health check: unhealthy when Telegram has not answered a poll for 10 minutes
 # (the bot touches the file on every poll, see HEARTBEAT_PATH in config.py)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python3 -c "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/intrubot.heartbeat') > 120)"
+    CMD python3 -c "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/intrubot.heartbeat') > 600)"
 
 ENTRYPOINT ["python3", "intrubot.py"]

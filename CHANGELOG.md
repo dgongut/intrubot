@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.3
+
+### 🐛 Correcciones
+
+- **El `HEALTHCHECK` ya no es tan estricto.** El contenedor pasaba a *unhealthy* si Telegram no respondía durante 2 minutos, algo que ocurre a menudo con cortes breves de red o de Telegram y llenaba de notificaciones a quien vigila el estado del contenedor. Ahora el margen es de 10 minutos.
+
+### 📦 Dependencias
+
+- pyTelegramBotAPI 4.37.1 y scapy 2.8.0.
+
 ## v2.0.2
 
 ### 🐛 Correcciones
