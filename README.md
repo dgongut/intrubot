@@ -30,7 +30,12 @@ Lleva el control de los dispositivos que se conectan a tu red.
 - ✅ Imagen multiarquitectura compatible con Raspberry Pi, NAS y servidores estándar
 - ✅ Soporte de idiomas (Spanish, English)
 
+<!-- dockerhub:skip -->
 ¿Lo buscas en [![](https://badgen.net/badge/icon/docker?icon=docker&label)](https://hub.docker.com/r/dgongut/intrubot)?
+<!-- /dockerhub:skip -->
+<!-- dockerhub:only
+📦 Código fuente, incidencias y documentación completa en [GitHub](https://github.com/dgongut/intrubot).
+-->
 
 ## Crear tu bot de Telegram
 
@@ -205,6 +210,7 @@ La 2.0 se ha reescrito por completo. Mantén el mismo volumen `/app/data` y el b
 - **`tty: true` ya no hace falta.** Hasta la 1.x el compose lo llevaba para que los logs del bot salieran en `docker logs`; desde la 2.0 la imagen los escribe al momento sin él. Puedes quitarlo, o dejarlo: no molesta.
 - Las variables `IP_RANGE` y `HOURS_BETWEEN_SCANS` siguen funcionando igual. `IP_RANGE` acepta además redes CIDR y varias entradas separadas por comas, y si tienes varias VLAN puedes pasarte a `NETWORKS`.
 
+<!-- dockerhub:skip -->
 ## Solo para desarrolladores
 
 ### Ejecución con código local
@@ -242,3 +248,4 @@ Para detenerlo:
 ```bash
 docker compose -f docker-compose.local.yaml down --rmi all
 ```
+<!-- /dockerhub:skip -->
